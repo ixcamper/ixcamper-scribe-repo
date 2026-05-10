@@ -1,0 +1,83 @@
+{
+  "name": "ixcamper-ui",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "prefix": "app",
+  "sourceRoot": "ixcamper-ui/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/ixcamper-ui",
+        "browser": "ixcamper-ui/src/main.ts",
+        "tsConfig": "ixcamper-ui/tsconfig.app.json",
+        "inlineStyleLanguage": "scss",
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "ixcamper-ui/public"
+          }
+        ],
+        "styles": ["ixcamper-ui/src/styles.scss"]
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "500kb",
+              "maximumError": "1mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "4kb",
+              "maximumError": "8kb"
+            }
+          ],
+          "outputHashing": "all"
+        },
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@angular/build:dev-server",
+      "options": {
+        "buildTarget": "ixcamper-ui:build",
+        "proxyConfig": "ixcamper-ui/proxy.conf.json"
+      },
+      "configurations": {
+        "production": {
+          "buildTarget": "ixcamper-ui:build:production"
+        },
+        "development": {
+          "buildTarget": "ixcamper-ui:build:development"
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@angular/build:unit-test",
+      "options": {}
+    },
+    "serve-static": {
+      "continuous": true,
+      "executor": "@nx/web:file-server",
+      "options": {
+        "buildTarget": "ixcamper-ui:build",
+        "staticFilePath": "dist/ixcamper-ui/browser",
+        "spa": true
+      }
+    }
+  }
+}
