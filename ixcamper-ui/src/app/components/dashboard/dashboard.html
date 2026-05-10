@@ -1,0 +1,191 @@
+<div [class.dark-mode]="darkMode()" class="theme-wrapper">
+  @if (notification()) {
+  <div class="notification-toast" [class]="'toast-' + notification()?.type">
+    {{ notification()?.message }}
+  </div>
+  }
+  <div class="scribe-container">
+    <header>
+      <h1>Ixcamper Scribe</h1>
+      <button (click)="toggleTheme()" class="theme-toggle">
+        {{ darkMode() ? '☀️ Light' : '🌙 Dark' }}
+      </button>
+      <input
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+        class="search-bar"
+        placeholder="Search notes (e.g. 'Spring Boot' or 'Angular')..."
+      />
+    </header>
+
+    <div class="input-section">
+      <div class="input-header">
+        <button (click)="togglePreview()" class="btn-secondary">
+          {{ isPreviewMode() ? '✍️ Edit' : '👁️ Preview' }}
+        </button>
+      </div>
+
+      <div class="editor-wrapper" [class.preview-active]="isPreviewMode()">
+        <textarea
+          #noteInput
+          [(ngModel)]="newNote"
+          placeholder="Write in Markdown (e.g. # TODO)..."
+          class="editor-textarea"
+        ></textarea>
+
+        <div class="markdown-preview-area">
+          <markdown [data]="newNote"></markdown>
+        </div>
+      </div>
+
+      <button (click)="addNote()" class="btn-primary">Scribe It</button>
+    </div>
+
+    <div class="category-bar">
+      @for (cat of categories; track cat) {
+      <button
+        [class.active]="activeCategory() === cat"
+        (click)="activeCategory.set(cat)"
+      >
+        {{ cat }}
+      </button>
+      }
+    </div>
+
+    <div class="notes-list">
+      @for (note of filteredNotes(); track note.id) {
+      <div class="note-card">
+        <div class="note-header">
+          <div class="left-meta">
+            <span class="badge">{{ note.category }}</span>
+            <button
+              (click)="togglePin(note)"
+              class="btn-pin"
+              [class.is-pinned]="note.pinned"
+              [title]="note.pinned ? 'Unpin Note' : 'Pin Note'"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <line x1="12" y1="17" x2="12" y2="22"></line>
+                <path
+                  d="M5 17h14v-2l-1.5-1.5V5a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v8.5L5 15v2z"
+                ></path>
+              </svg>
+            </button>
+            @if (note.gistUrl) {
+            <a
+              [href]="note.gistUrl"
+              target="_blank"
+              class="sync-indicator"
+              title="View on GitHub"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"
+                ></path>
+              </svg>
+            </a>
+            }
+          </div>
+          <span class="timestamp"
+            >{{ note.createdAt ? (note.createdAt | date: 'MMM dd, HH:mm') :
+            'Draft' }}</span
+          >
+        </div>
+
+        <div class="note-content">
+          @if (editingNoteId() === note.id) {
+          <textarea
+            [(ngModel)]="editContent"
+            class="edit-textarea"
+            (keydown.meta.enter)="saveEdit(note)"
+            (keydown.esc)="cancelEdit()"
+          >
+          </textarea>
+          <div class="edit-actions">
+            <button (click)="saveEdit(note)" class="btn-save">Save</button>
+            <button (click)="cancelEdit()" class="btn-cancel">Cancel</button>
+          </div>
+          } @else {
+          <markdown [data]="note.content | highlight: searchQuery()"></markdown>
+          }
+        </div>
+
+        <div class="note-actions">
+          @if (editingNoteId() !== note.id) {
+          <button (click)="startEdit(note)" class="btn-icon" title="Edit Note">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+              ></path>
+              <path
+                d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+              ></path>
+            </svg>
+          </button>
+          }
+
+          <button
+            (click)="handleGistAction(note)"
+            class="btn-icon"
+            [class.is-synced]="note.gistUrl"
+            [title]="note.gistUrl ? 'View on GitHub' : 'Export to Gist'"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"
+              ></path>
+            </svg>
+          </button>
+
+          <button
+            (click)="deleteNote(note.id)"
+            class="btn-icon delete-hover"
+            title="Delete Note"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path
+                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+              ></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+      } @empty {
+      <div class="empty-state">
+        <p>No notes found matching "{{ searchQuery() }}"</p>
+        <button (click)="searchQuery.set('')">Clear Search</button>
+      </div>
+      }
+    </div>
+  </div>
+</div>

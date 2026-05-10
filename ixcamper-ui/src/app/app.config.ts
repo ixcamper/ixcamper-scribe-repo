@@ -17,6 +17,8 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideRouter(appRoutes),
     provideHttpClient(withInterceptors([errorInterceptor])),
-    provideMarkdown({ loader: HttpClient }),
+    provideMarkdown({
+      loader: HttpClient,
+    }),
   ],
 };

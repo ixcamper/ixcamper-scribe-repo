@@ -55,4 +55,16 @@ public class NoteController {
 			})
 			.orElse(ResponseEntity.notFound().build());
 	}
+
+	@PutMapping("/{id}")
+	public ResponseEntity<Note> updateNote(@PathVariable Long id, @RequestBody Note updatedNote) {
+		return noteRepository.findById(id)
+			.map(note -> {
+				note.setContent(updatedNote.getContent());
+				note.setCategory(updatedNote.getCategory());
+				// We keep the original createdAt but update the content
+				return ResponseEntity.ok(noteRepository.save(note));
+			})
+			.orElse(ResponseEntity.notFound().build());
+	}
 }
