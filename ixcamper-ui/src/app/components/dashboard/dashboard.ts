@@ -283,10 +283,18 @@ export class DashboardComponent implements OnInit {
           this.noteInsights.update((prev) => ({ ...prev, [note.id]: insight }));
           this.isAnalyzing.set(null);
         },
-        error: () => {
+        // THIS IS THE ERROR BLOCK TO UPDATE:
+        error: (err) => {
           this.isAnalyzing.set(null);
+
+          // Detailed check for your Mac M2 environment
+          const errorMsg =
+            err.status === 0
+              ? 'Ollama is offline. Check your Mac menu bar!'
+              : 'AI Agent is currently unavailable.';
+
           this.notification.set({
-            message: 'AI Agent is offline',
+            message: errorMsg,
             type: 'error',
           });
         },
