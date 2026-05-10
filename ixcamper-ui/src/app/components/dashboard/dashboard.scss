@@ -629,3 +629,50 @@ header {
     transform: rotate(360deg);
   }
 }
+
+.insight-overlay {
+  margin-top: 2rem;
+  padding: 14px;
+  background: #1e293b; /* Deep slate - terminal feel */
+  border-radius: 8px;
+  border-left: 4px solid #3b82f6;
+  color: #e2e8f0;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace; /* Developer feel */
+  font-size: 13px;
+  line-height: 1.6;
+  position: relative;
+  animation: slideDown 0.3s ease-out;
+}
+
+/* Add a "AI Agent" label in the corner */
+.insight-overlay::before {
+  content: 'AGENT INSIGHT';
+  position: absolute;
+  top: -10px;
+  left: 10px;
+  background: #3b82f6;
+  color: white;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.insight-text {
+  margin: 0;
+  white-space: pre-wrap; /* Preserves Llama 3's formatting */
+  max-height: 200px;
+  overflow-y: auto;
+}

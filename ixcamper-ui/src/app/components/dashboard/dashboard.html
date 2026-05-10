@@ -63,12 +63,6 @@
     <div class="notes-list">
       @for (note of filteredNotes(); track note.id) {
       <div class="note-card">
-        @if (noteInsights()[note.id]) {
-        <div class="agent-insight">
-          <strong>🤖 Agent Insight:</strong>
-          <p>{{ noteInsights()[note.id] }}</p>
-        </div>
-        }
         <div class="note-header">
           <div class="left-meta">
             <span class="badge">{{ note.category }}</span>
@@ -133,6 +127,18 @@
           </div>
           } @else {
           <markdown [data]="note.content | highlight: searchQuery()"></markdown>
+          } @if (noteInsights()[note.id]; as insight) {
+          <div class="insight-overlay">
+            <div class="insight-content">
+              <p class="insight-text">{{ insight }}</p>
+            </div>
+
+            <div class="insight-actions">
+              <button class="close-btn" (click)="clearInsight(note.id)">
+                Dismiss
+              </button>
+            </div>
+          </div>
           }
         </div>
 

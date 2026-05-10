@@ -58,7 +58,7 @@ export class DashboardComponent implements OnInit {
   editContent = signal<string>('');
 
   isAnalyzing = signal<number | null>(null);
-  noteInsights = signal<Record<number, string>>({});
+  noteInsights = signal<Record<string, string>>({});
 
   ollamaStatus = signal<'online' | 'offline' | 'loading'>('loading');
 
@@ -291,5 +291,13 @@ export class DashboardComponent implements OnInit {
           });
         },
       });
+  }
+
+  clearInsight(noteId: number) {
+    this.noteInsights.update((prev) => {
+      const updated = { ...prev };
+      delete updated[noteId];
+      return updated;
+    });
   }
 }
