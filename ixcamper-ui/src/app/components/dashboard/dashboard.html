@@ -6,7 +6,15 @@
   }
   <div class="scribe-container">
     <header>
-      <h1>Ixcamper Scribe</h1>
+      <div class="status-indicator">
+        <span
+          class="dot"
+          [class.online]="ollamaStatus() === 'online'"
+          [class.offline]="ollamaStatus() === 'offline'"
+        ></span>
+        <span>Local Agent: {{ ollamaStatus() | titlecase }}</span>
+      </div>
+      <h1>Ixcamper Scribe Repo</h1>
       <button (click)="toggleTheme()" class="theme-toggle">
         {{ darkMode() ? '☀️ Light' : '🌙 Dark' }}
       </button>
@@ -55,6 +63,12 @@
     <div class="notes-list">
       @for (note of filteredNotes(); track note.id) {
       <div class="note-card">
+        @if (noteInsights()[note.id]) {
+        <div class="agent-insight">
+          <strong>🤖 Agent Insight:</strong>
+          <p>{{ noteInsights()[note.id] }}</p>
+        </div>
+        }
         <div class="note-header">
           <div class="left-meta">
             <span class="badge">{{ note.category }}</span>
@@ -177,6 +191,34 @@
                 d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
               ></path>
             </svg>
+          </button>
+          <button
+            class="agent-btn"
+            [disabled]="isAnalyzing() !== null"
+            (click)="getAgentInsight(note)"
+          >
+            @if (isAnalyzing() === note.id) {
+            <div class="spinner-small"></div>
+            } @else {
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.04z"
+              />
+              <path
+                d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.04z"
+              />
+            </svg>
+            }
           </button>
         </div>
       </div>

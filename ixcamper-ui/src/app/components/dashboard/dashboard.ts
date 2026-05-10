@@ -10,7 +10,7 @@ import {
 import { MarkdownComponent } from 'ngx-markdown';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { DatePipe } from '@angular/common';
+import { DatePipe, TitleCasePipe } from '@angular/common';
 import { HighlightPipe } from '../../pipes/highlight.pipe';
 
 interface Note {
@@ -25,7 +25,13 @@ interface Note {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [FormsModule, MarkdownComponent, DatePipe, HighlightPipe],
+  imports: [
+    FormsModule,
+    MarkdownComponent,
+    DatePipe,
+    HighlightPipe,
+    TitleCasePipe,
+  ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
@@ -50,6 +56,14 @@ export class DashboardComponent implements OnInit {
 
   editingNoteId = signal<number | null>(null);
   editContent = signal<string>('');
+
+  isAnalyzing = signal<number | null>(null);
+  noteInsights = signal<Record<number, string>>({});
+
+  ollamaStatus = signal<'online' | 'offline' | 'loading'>('loading');
+
+  loadingAgent = signal<boolean>(false);
+  insight = signal<string | null>(null);
 
   @ViewChild('noteInput') noteInput!: ElementRef;
 
@@ -76,6 +90,20 @@ export class DashboardComponent implements OnInit {
       return a.pinned ? -1 : 1;
     });
   });
+
+  constructor() {
+    // Poll the health check every 30 seconds
+    setInterval(() => this.checkHealth(), 30000);
+    this.checkHealth();
+  }
+
+  checkHealth() {
+    this.http.get<{ status: string }>('/api/agent/health').subscribe({
+      next: (res) =>
+        this.ollamaStatus.set(res.status === 'UP' ? 'online' : 'offline'),
+      error: () => this.ollamaStatus.set('offline'),
+    });
+  }
 
   ngOnInit() {
     this.loadNotes();
@@ -206,24 +234,61 @@ export class DashboardComponent implements OnInit {
     this.editContent.set(note.content);
   }
 
+  // Add to dashboard.ts class
   cancelEdit() {
     this.editingNoteId.set(null);
+    this.editContent.set('');
   }
 
   saveEdit(note: Note) {
+    const content = this.editContent().trim();
+    if (!content) return;
+
     this.http
       .put<Note>(`/api/notes/${note.id}`, {
-        content: this.editContent(),
-        category: note.category,
+        ...note, // Spread existing properties like category
+        content: content,
       })
       .subscribe({
-        next: (updated) => {
+        next: (updatedNote) => {
+          // Update the signal locally for instant UI feedback
           this.notes.update((current) =>
-            current.map((n) => (n.id === updated.id ? updated : n)),
+            current.map((n) => (n.id === updatedNote.id ? updatedNote : n)),
           );
           this.editingNoteId.set(null);
           this.notification.set({ message: 'Note updated!', type: 'success' });
           setTimeout(() => this.notification.set(null), 3000);
+        },
+        error: (err) => {
+          console.error('Update failed', err);
+          this.notification.set({
+            message: 'Failed to update note',
+            type: 'error',
+          });
+        },
+      });
+  }
+
+  getAgentInsight(note: Note) {
+    this.isAnalyzing.set(note.id);
+
+    this.http
+      .post(
+        '/api/agent/analyze',
+        { content: note.content },
+        { responseType: 'text' },
+      )
+      .subscribe({
+        next: (insight) => {
+          this.noteInsights.update((prev) => ({ ...prev, [note.id]: insight }));
+          this.isAnalyzing.set(null);
+        },
+        error: () => {
+          this.isAnalyzing.set(null);
+          this.notification.set({
+            message: 'AI Agent is offline',
+            type: 'error',
+          });
         },
       });
   }
