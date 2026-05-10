@@ -27,12 +27,6 @@
     </header>
 
     <div class="input-section">
-      <div class="input-header">
-        <button (click)="togglePreview()" class="btn-secondary">
-          {{ isPreviewMode() ? '✍️ Edit' : '👁️ Preview' }}
-        </button>
-      </div>
-
       <div class="editor-wrapper" [class.preview-active]="isPreviewMode()">
         <textarea
           #noteInput
@@ -47,6 +41,14 @@
       </div>
 
       <button (click)="addNote()" class="btn-primary">Scribe It</button>
+      <button
+        (click)="togglePreview()"
+        class="btn-secondary"
+        [style.margin-left.px]="8"
+        [style.height.px]="30"
+      >
+        {{ isPreviewMode() ? '✍️ Edit' : '👁️ Preview' }}
+      </button>
     </div>
 
     <div class="category-bar">
